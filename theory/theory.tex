@@ -1,0 +1,48 @@
+\documentclass{article}
+\title{Theory}
+\author{}
+
+\begin{document}
+
+\section{Training at leading order}
+\subsection{At initalisation for a Multilayer Perceptron}
+The superscript index denotes the layer, the subscript indices denote the input sample:\\ \\
+$K^{(1)}_{\delta_1\delta_2} = C^{(1)}_b + \frac{C^{(1)}_w }{n_0} \underline{x}_{\delta_1} * \underline{x}_{\delta_2}$
+\\
+\\
+$K^{(\ell +1)}_{\delta_1\delta_2} = C^{(\ell +1)}_b + C^{(\ell +1)}_w \langle \rho_{\delta_1} \rho_{\delta_2} \rangle _{K^{(\ell)}}$
+\\
+\\
+$\langle \rho_{\delta_1} \rho_{\delta_2} \rangle _K = \int[\Pi d\phi]   \rho(\phi_{\delta_1}) \rho(\phi_{\delta_2}) \frac{e^{ -\frac{1}{2}\phi^{T}K^{-1}\phi}}{(det 2 \pi K)^{\frac{1}{2}} } $
+\\
+\\
+$\Theta^{(1)}_{\delta_1\delta_2} = \lambda^{(1)}_b + \frac{\lambda^{(1)}_w }{n_0} \underline{x}_{\delta_1} * \underline{x}_{\delta_2}$
+\\
+\\
+$\Theta^{(\ell +1)}_{\delta_1\delta_2} = \lambda^{(\ell +1)}_b + \lambda^{(\ell +1)}_w  \langle \rho_{\delta_1} \rho_{\delta_2} \rangle _{K^{(\ell)}} + C^{(\ell +1)}_w  \Theta^{(\ell)}_{\delta_1\delta_2} \langle \rho_{\delta_1}, \rho_{\delta_2} \rangle _{K^{(\ell)}}$
+\\
+\\
+Dataset: $\delta \epsilon \mathcal{D} = \mathcal{A} \cup \mathcal{B}$, $\alpha \epsilon \mathcal{A}$ (training data), $\beta \epsilon \mathcal{B}$ (validation data)
+\\
+\\
+For the output layer we drop the the superscript layer index:\\ \\
+L = output layer, $\phi_{i\delta} \equiv \phi^{(L)}_{i\delta} $, $K_{\delta_1\delta_2} \equiv K^{(L)}_{\delta_1\delta_2} $, $\Theta^{(L)}_{\delta_1\delta_2} \equiv \Theta_{\delta_1\delta_2}$
+\\
+\\
+Mean square error (MSE) loss: $\ell_\delta=\frac{1}{2} \sum_{i}(\phi_{i\delta}-y_{i\delta})^2$
+\\
+\\
+$\overline{f(\phi)} \equiv$ ensemble average of $f(\phi)$ with respect to initial parameters
+\\
+\\
+Gradient flow: $\dot{\overline{\phi}}_{i\delta} = - \Theta_{\delta \alpha}(\overline{\phi}_{i\alpha}-y_{i\alpha})$, $\dot{\Theta}_{\delta\alpha}=0$
+\\
+\\
+$\overline{\phi}_{i\delta}(t)=\left[ \Theta \tilde{\Theta}^{-1} (1-e^{-t \tilde{\Theta}}) \right]_{\delta\alpha} y_{i\alpha} $, $\tilde{\Theta}=(\Theta_{\alpha_1 \alpha_2})$
+\\
+\\
+$\overline{\ell}_\delta (t) = \frac{1}{2}\left\{\left[1- \Theta \tilde{\Theta}^{-1} (1-e^{-t \tilde{\Theta}}) \right] (n_L K + \underline{y}\cdot \underline{y})
+\left[1-(1-e^{-t \tilde{\Theta}})\tilde{\Theta}^{-1}\Theta\right] \right\}_{\delta\delta} $
+
+
+\end{document}

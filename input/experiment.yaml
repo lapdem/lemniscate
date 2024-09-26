@@ -1,0 +1,55 @@
+experiment:
+  ensemble:    
+    number_of_networks: 5   
+    network:
+      hyperparameters:
+        layerwidths: [1, 3, 1]
+        activation_function: tanh
+        output_activation_function: linear
+        scale_weighted_sum: one_over_root_n
+        training:
+          learning_rate: 0.1
+          max_iterations: 5000
+          loss_function: mean_square
+          numeric_delta: 0.001  
+      initial_parameters:      
+        #possible options: generate, file      
+        source: generate                         
+        generate:
+          random_seed: 10269
+          weights:
+            distribution: gaussian
+            mean: 0
+            variance: 1
+          biases:
+            distribution: gaussian
+            mean: 0
+            variance: 1
+  data:
+    #source of data
+    #possible options: generate, file (not yet)    
+    source: generate
+    #only needed if source: generate
+    generate:
+      input:      
+        min: 0
+        max: 1      
+        size: 5
+        #spacing options: linear, logartihmic, random
+        spacing: linear
+      output:
+        function: legendre
+        parameters:
+          coefficients: [0,0,0,0,0,0,0,0,0,0,1]
+        noise:        
+          distribution: gaussian
+          random_seed: 10313
+          mean: 0
+          variance: 0    
+  results:
+    observables: [NTK, K]
+    analytic_order: O1
+    steps_per_image: 10  
+   
+
+
