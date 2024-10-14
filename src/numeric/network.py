@@ -59,7 +59,7 @@ class Network:
             else:
                 activation = self.output_activation_function(preactivation)
         return activation
-
+    
     def evolve(self, training_data):
         learning_rate = self.hyperparameters["training"]["learning_rate"]
         delta = self.hyperparameters["training"]["numeric_delta"]

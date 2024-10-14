@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import scipy as sp
+from numba import jit
 
 # analytic solutions for infinite width limit of a neural network during traing
 # first order
@@ -54,6 +55,7 @@ def correlator(rho, K):
             K_reduced_inv = np.linalg.inv(K_reduced)
             K_reduced_det = np.linalg.det(K_reduced)
 
+            @jit
             def integrand(phi_delta_1, phi_delta_2, K_reduced_inv):
                 phi = np.array([phi_delta_1, phi_delta_2])
                 return (

@@ -34,7 +34,7 @@ experiment:
       input:      
         min: 0
         max: 1      
-        size: 5
+        size: 10
         #spacing options: linear, logartihmic, random
         spacing: linear
       output:
