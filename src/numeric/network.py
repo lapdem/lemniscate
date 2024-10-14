@@ -1,17 +1,9 @@
 import numpy as np
 #TODO:change this import 
-from util.data_generation import *
+import util.data_generation as dg
+from util.activation_functions import activation_functions
 
-activation_functions = {}
-activation_function = lambda f: activation_functions.setdefault(f.__name__, f)
 
-@activation_function
-def tanh(input_values):
-    return np.tanh(input_values)
-
-@activation_function
-def linear(input_values):
-    return input_values
     
 
 loss_functions = {}
@@ -37,8 +29,8 @@ class Network:
         #no bias on input layer
         biases_sizes = layerwidths[1:]
         weights_sizes = list(zip(layerwidths[:-1], layerwidths[1:]))
-        self.parameters["biases"] = [generate_random_numbers(width, initial_parameter_config["biases"], random_number_generator=random_number_generator) for width in layerwidths[1:]] 
-        self.parameters["weights"] = [generate_random_numbers((first_width, second_width), initial_parameter_config["weights"], random_number_generator=random_number_generator) for first_width, second_width in zip(layerwidths[:-1], layerwidths[1:])]
+        self.parameters["biases"] = [dg.generate_random_numbers(width, initial_parameter_config["biases"], random_number_generator=random_number_generator) for width in layerwidths[1:]] 
+        self.parameters["weights"] = [dg.generate_random_numbers((first_width, second_width), initial_parameter_config["weights"], random_number_generator=random_number_generator) for first_width, second_width in zip(layerwidths[:-1], layerwidths[1:])]
 
     def compute_output(self, input):
         activation = input

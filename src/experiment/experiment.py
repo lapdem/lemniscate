@@ -2,11 +2,9 @@ import yaml
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-#TODO:change this import 
-from util.data_generation import *
-#TODO:change this import 
-from analytic.analytic import *
+import util.data_generation as dg
 from numeric.ensemble import Ensemble
+from analytic.theory import Theory
 
 class Experiment:  
     _config_entry_name = "experiment"
@@ -51,6 +49,7 @@ class Experiment:
         plt.show()
 
         ensemble = Ensemble(self.config[self._ensemble_config_entry_name])
+        theory = Theory(self.data, self.config["ensemble"]["network"]["hyperparameters"], 1.0, 1.0)
         
         training_config = self.config["ensemble"]["network"]["hyperparameters"]["training"]
         results_config = self.config["results"]
@@ -61,7 +60,7 @@ class Experiment:
             
             #input("Press [enter] to continue.")
             ensemble.evolve(self.data)
-
+            theory.evolve()
 
             #produce and save graphic every so often
             if step%steps_per_image == 0:
@@ -75,6 +74,9 @@ class Experiment:
                 average_output = np.average(outputs, axis=0)
                 plt.plot(inputs, np.concatenate(average_output).ravel(),"--", color='orange', linewidth=2, label = "Ensemble output average (numeric)")  
                 
+                theory_training_outputs = theory.compute_training_ouputs()
+                plt.plot(self.data[0], theory_training_outputs, "b+", label="Predicted outputs (analytic)")
+
                 ax = plt.gca()
                 ax.set_ylim([-1.5, 1.5])
                 ax.legend( loc="lower right")
@@ -92,13 +94,13 @@ class Experiment:
           
     def _generate_data(self, data_generation_config):       
         input_config = data_generation_config["input"]
-        input_values = generate_inputs(input_config)
+        input_values = dg.generate_inputs(input_config)
 
         output_config = data_generation_config["output"]
-        output_values = generate_outputs(input_values, output_config)
+        output_values = dg.generate_outputs(input_values, output_config)
         
         noise_config = output_config["noise"]
-        noise = generate_random_numbers(np.size(output_values), noise_config)        
+        noise = dg.generate_random_numbers(np.size(output_values), noise_config)        
         output_values += noise
 
         data = (input_values, output_values)

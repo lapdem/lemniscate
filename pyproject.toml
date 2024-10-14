@@ -1,5 +1,5 @@
 [project]
 name = "lemniscate"
 version = "0.01"
-dependencies = ["numpy", "matplotlib"]
+dependencies = ["numpy", "matplotlib", "scipy"]
   
