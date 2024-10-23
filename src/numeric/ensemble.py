@@ -39,5 +39,8 @@ class Ensemble:
         ]
 
     def evolve(self, training_data):
+        total_loss = 0
         for network in self.networks:
-            network.evolve(training_data)
+            total_loss += network.evolve(training_data)
+        average_loss = total_loss/len(self.networks)
+        return average_loss

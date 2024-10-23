@@ -98,6 +98,8 @@ class Network:
         self.parameters["biases"] = new_biases
         self.parameters["weights"] = new_weights
 
+        return self.compute_loss(training_data)
+
     def compute_loss(self, training_data):
         return sum(
             [

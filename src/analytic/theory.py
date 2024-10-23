@@ -35,6 +35,8 @@ class Theory:
         )
         print("Theta")
         print(self.Theta)
+        print("Eigenvalues of Theta")
+        print(np.linalg.eig(self.Theta))
 
     def evolve(self):
         self.t += 1

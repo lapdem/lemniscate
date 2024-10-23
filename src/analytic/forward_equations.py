@@ -85,14 +85,13 @@ def correlator(rho, K):
 def calculate_phi_bar(x, y, t, Theta):
     phi_bar = []
     for alpha, x_alpha in enumerate(x):
-        Theta_tilde = np.average(Theta[alpha])
+        Theta_tilde = Theta[alpha][alpha]
         phi_bar_alpha = (1 - math.exp(-t * Theta_tilde)) * y[alpha]
         phi_bar.append(phi_bar_alpha)
     return phi_bar
 
 
 # x = [[0.0], [0.2], [0.4], [0.6], [0.8], [1.0]]
-
 
 # rho = np.tanh
 # lambda_b = 0.1

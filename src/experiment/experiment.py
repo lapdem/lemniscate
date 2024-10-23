@@ -44,84 +44,100 @@ class Experiment:
 
         if not os.path.isdir(self._output_folder):
             os.makedirs(self._output_folder)
-
-        # graphics
-        fig = plt.figure()
-        plt.ion()
-        plt.show()
+       
 
         ensemble = Ensemble(self.config[self._ensemble_config_entry_name])
-        theory = Theory(
-            self.data, self.config["ensemble"]["network"]["hyperparameters"], 1.0, 1.0
-        )
+        #theory = Theory(
+        #    self.data, self.config["ensemble"]["network"]["hyperparameters"], 0.01, 0.01
+        #)
 
-        training_config = self.config["ensemble"]["network"]["hyperparameters"][
-            "training"
-        ]
+        training_config = self.config["ensemble"]["network"]["hyperparameters"]["training"]
+
         results_config = self.config["results"]
-        steps_per_image = results_config["steps_per_image"]
+        
 
+        #create subpolts for training
+        training_graphic_configs = self.config["graphics"]["training"]
+        plt.ion()
+        training_fig = plt.figure()
+        for training_graphic in training_graphic_configs:
+            ax = training_fig.subplots()
+            training_graphic["ax"] = ax
+                  
+            
+
+        training_fig.show()
+        
         for step in range(training_config["max_iterations"]):
-            # display data points
+            
+                        
+            average_numeric_loss = ensemble.evolve(self.data)
+            #theory.evolve()
 
-            # input("Press [enter] to continue.")
-            ensemble.evolve(self.data)
-            theory.evolve()
+            #draw training graphs
+            for training_graphic in training_graphic_configs:
+                if step % training_graphic["steps_per_image"] == 0:
+                    ax = training_graphic["ax"]
+                    ax.clear()
+                    ax.set_xlim(training_graphic["x_lim"])
+                    ax.set_ylim(training_graphic["y_lim"])      
+                    
+                    
 
-            # produce and save graphic every so often
-            if step % steps_per_image == 0:
-                plt.clf()
-                plt.plot(
-                    self.data[0],
-                    self.data[1].flatten(),
-                    "k.",
-                    label="Training data points",
-                )
+                    inputs = np.linspace(0, 1, 100)
+                    outputs = ensemble.compute_outputs(inputs)    
 
-                inputs = np.linspace(0, 1, 100)
-                outputs = ensemble.compute_outputs(inputs)
-                for j, output in enumerate(outputs):
-                    plt.plot(
-                        inputs,
-                        np.concatenate(output).ravel(),
-                        "r-",
-                        label="Ensemble output (numeric)" if j == 0 else "",
-                    )
-                average_output = np.average(outputs, axis=0)
-                plt.plot(
-                    inputs,
-                    np.concatenate(average_output).ravel(),
-                    "--",
-                    color="orange",
-                    linewidth=2,
-                    label="Ensemble output average (numeric)",
-                )
+                    if "ensemble" in training_graphic["graphs"]:
+                        for i, output in enumerate(outputs):
+                            ax.plot(
+                                inputs,
+                                np.concatenate(output).ravel(),
+                                "r-",
+                                label="Ensemble output (numeric)" if i == 0 else "",
+                            )
 
-                theory_training_outputs = theory.compute_training_ouputs()
-                plt.plot(
-                    self.data[0],
-                    theory_training_outputs,
-                    "b+",
-                    label="Predicted outputs (analytic)",
-                )
+                    if "ensemble_average" in training_graphic["graphs"]:
+                        average_output = np.average(outputs, axis=0)
+                        ax.plot(
+                            inputs,
+                            np.concatenate(average_output).ravel(),
+                            "--",
+                            color="orange",
+                            linewidth=2,
+                            label="Ensemble output average (numeric)",
+                        )
 
-                ax = plt.gca()
-                ax.set_ylim([-1.5, 1.5])
-                ax.legend(loc="lower right")
-                plt.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
-                plt.draw()
+                    if "data" in training_graphic["graphs"]:
+                        ax.plot(
+                            self.data[0],
+                            self.data[1].flatten(),
+                            "k.",
+                            label="Training data points",
+                        )
+
+                    ax.legend(loc="lower right")
+                    ax.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
+                    
+                training_fig.canvas.draw()
                 plt.pause(0.001)
-                fig.savefig(
+                training_fig.savefig(
                     os.path.join(
-                        self._output_folder, f"image{int(step/steps_per_image):>04}.png"
+                        self._output_folder, f"image{int(step/training_graphic["steps_per_image"]):>04}.png"
                     ),
-                    dpi=fig.dpi,
+                    dpi=training_fig.dpi,
                 )
+                
+            
+            average_numeric_loss_cutoff = training_config.get("average_loss_cutoff", 0.0)
+            if average_numeric_loss < average_numeric_loss_cutoff:
+                break
 
         # create a video, requires ffmpeg installed
         # ffmpeg -f image2 -framerate 10 -i output\image%04d.png -vcodec libx264 -crf 15  -pix_fmt yuv420p -y \output\learning.mp4
 
-        results = []
+        results = {
+            "training_time": step
+        }
         return results
 
     def _generate_data(self, data_generation_config):
