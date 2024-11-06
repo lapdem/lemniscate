@@ -117,7 +117,7 @@ class Experiment:
 
                     ax.legend(loc="lower right")
                     ax.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
-                    
+
                 training_fig.canvas.draw()
                 plt.pause(0.001)
                 training_fig.savefig(
@@ -131,6 +131,8 @@ class Experiment:
             average_numeric_loss_cutoff = training_config.get("average_loss_cutoff", 0.0)
             if average_numeric_loss < average_numeric_loss_cutoff:
                 break
+
+        plt.close(training_fig)
 
         # create a video, requires ffmpeg installed
         # ffmpeg -f image2 -framerate 10 -i output\image%04d.png -vcodec libx264 -crf 15  -pix_fmt yuv420p -y \output\learning.mp4
@@ -148,8 +150,8 @@ class Experiment:
         output_values = dg.generate_outputs(input_values, output_config)
 
         noise_config = output_config["noise"]
-        noise = dg.generate_random_numbers(np.size(output_values), noise_config)
-        output_values += noise
+        #noise = dg.generate_random_numbers(np.size(output_values), noise_config)
+        #output_values += noise
 
         data = (input_values, output_values)
         return data

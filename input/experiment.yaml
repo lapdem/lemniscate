@@ -3,7 +3,7 @@ experiment:
     number_of_networks: 5   
     network:
       hyperparameters:
-        layerwidths: [1, 10, 1]
+        layerwidths: [1, 5, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
@@ -12,7 +12,8 @@ experiment:
           learning_rate: 0.05
           max_iterations: 15000
           loss_function: mean_square
-          numeric_delta: 0.001  
+          numeric_delta: 0.001
+          method: backprop  
       initial_parameters:      
         #possible options: generate, file      
         source: generate                         

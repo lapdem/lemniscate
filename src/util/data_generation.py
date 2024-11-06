@@ -8,17 +8,17 @@ input_generator = lambda f: input_generators.setdefault(f.__name__, f)
 
 @input_generator
 def linear(config):
-    return np.linspace(config["min"], config["max"], config["size"])
+    return np.reshape(np.linspace(config["min"], config["max"], config["size"]),[-1, 1])
 
 
 @input_generator
 def logarithmic(config):
-    return np.logspace(config["min"], config["max"], config["size"])
+    return np.reshape(np.logspace(config["min"], config["max"], config["size"]),[-1, 1])
 
 
 @input_generator
 def random(config):
-    return generate_random_numbers(config["size"], config)
+    return np.reshape(generate_random_numbers(config["size"], config),[-1, 1])
 
 
 def generate_inputs(config):
@@ -32,6 +32,12 @@ output_generator = lambda f: output_generators.setdefault(f.__name__, f)
 @output_generator
 def legendre(input_values, parameters):
     return np.polynomial.legendre.legval(input_values, parameters["coefficients"])
+
+@output_generator
+def sin(input_values, parameters):
+    frequency = parameters.get("frequency", 1.0)
+    phase = parameters.get("phase", 0.0)
+    return np.sin((input_values*2*np.pi*frequency)+phase)
 
 
 def generate_outputs(input_values, config):
