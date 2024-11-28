@@ -1,20 +1,21 @@
 experiment:
   ensemble:    
-    number_of_networks: 10   
+    number_of_networks: 10  
     network:
-      implementation: NetworkTF #tensorflow 
       hyperparameters:
-        layerwidths: [1, 100, 1]
+        layerwidths: [1, 50, 50, 50, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
-        training:          
-          learning_rate: 0.01          
+        training:
+          average_loss_cutoff: 0.01
+          learning_rate: 0.01
+          max_iterations: 150000
           loss_function: mean_squared_error
-          #numeric_delta: 0.001  #networkNP only
-          #method: backprop  #networkNP only
+          numeric_delta: 0.001
+          method: backprop  
       initial_parameters:      
-        #possible options: generate, file (not yet)     
+        #possible options: generate, file      
         source: generate                         
         generate:
           random_seed: 10269
@@ -35,33 +36,27 @@ experiment:
       input:      
         min: 0
         max: 1      
-        size: 100
+        size: 5
         #spacing options: linear, logartihmic, random
         spacing: linear
-        training_data_ratio: 0.3
       output:
         function: legendre
         parameters:
-          coefficients: [0,0,0,0,0,1,0,0,0,0,0]
+          coefficients: [0,0,0,0,0,0,0,0,0,1,0]
         noise:        
           distribution: gaussian
           random_seed: 10313
           mean: 0
           variance: 0
-  steps: 
-    source: range
-    range:
-      start: 0
-      stop: 1000
-      step: 100 
   graphics:
-    training:  
-      - graphs: [training_data, ensemble, ensemble_average, theory]
+    training:      
+      - steps_per_image: 10  
+        graphs: [data, ensemble, ensemble_average]
         x_lim: [-0.1,1.1]
-        y_lim: [-1.5, 1.5]            
+        y_lim: [-1.5, 1.5]
+            
   results:
-    loss_threshold: 0
-#    observables: [NTK, K]
+    observables: [NTK, K]
     analytic_order: O1
      
    

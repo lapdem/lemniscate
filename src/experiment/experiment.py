@@ -1,6 +1,7 @@
 import yaml
 import os
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 import util.data_generation as dg
 from numeric.ensemble import Ensemble
@@ -22,7 +23,7 @@ class Experiment:
         ) as config_file:
             self.config = yaml.safe_load(config_file)[self._config_entry_name]
 
-        self.data = self.create_data()
+        self.data, self.training_data = self.create_data()
 
     def create_data(self):
         data_config = self.config[self._data_config_entry_name]
@@ -44,102 +45,186 @@ class Experiment:
 
         if not os.path.isdir(self._output_folder):
             os.makedirs(self._output_folder)
-       
+
+        # write config to output folder
+        with open(os.path.join(self._output_folder, "experiment.yaml"), "w") as outfile:
+            yaml.dump({"experiment": self.config}, outfile)
 
         ensemble = Ensemble(self.config[self._ensemble_config_entry_name])
-        #theory = Theory(
-        #    self.data, self.config["ensemble"]["network"]["hyperparameters"], 0.01, 0.01
-        #)
+        theory = Theory(self.config["ensemble"]["network"]["hyperparameters"])
 
-        training_config = self.config["ensemble"]["network"]["hyperparameters"]["training"]
+        training_dynamics = {
+            "steps": [],
+            "numeric_losses": [],
+            "numeric_outputs": [],
+            "theoretic_loss": [],
+            "theoretic_output": [],
+        }
 
-        results_config = self.config["results"]
-        
+        theory.initialise_parameters(
+            self.config["ensemble"]["network"]["initial_parameters"]["generate"]
+        )
 
-        #create subpolts for training
+        ensemble.set_training_data(self.training_data)
+
+        theory.set_data(self.data)
+        theory.set_training_data(self.training_data)
+
+        # create subplpts for training
         training_graphic_configs = self.config["graphics"]["training"]
         plt.ion()
         training_fig = plt.figure()
         for training_graphic in training_graphic_configs:
-            ax = training_fig.subplots()
+            ax = training_fig.add_subplot()
             training_graphic["ax"] = ax
-                  
-            
 
         training_fig.show()
-        
-        for step in range(training_config["max_iterations"]):
-            
-                        
-            average_numeric_loss = ensemble.evolve(self.data)
-            #theory.evolve()
 
-            #draw training graphs
+        results_config = self.config["results"]
+
+        numeric_training_times = [
+            0 for _ in range(self.config["ensemble"]["number_of_networks"])
+        ]
+        theoretical_training_time = 0
+
+        step_range = []
+        step_config = self.config["steps"]
+        if step_config["source"] == "range":
+            step_range = range(
+                step_config["range"]["start"],
+                step_config["range"]["stop"],
+                step_config["range"]["step"],
+            )
+        if step_config["source"] == "list":
+            step_range = step_config["list"]
+
+        previous_step = 0
+        for step_index, step in enumerate(step_range):
+
+            theoretic_loss = theory.evolve(step - previous_step)
+
+            numeric_losses = ensemble.evolve(step - previous_step)
+
+            previous_step = step
+            print(f"Step {step} completed")
+            training_dynamics["steps"].append(step)
+            training_dynamics["numeric_losses"].append(numeric_losses)
+            training_dynamics["theoretic_loss"].append(theoretic_loss)
+            print(f"theoretic loss {theoretic_loss}")
+            print(f"numeric losses {numeric_losses}")
+
+            inputs = np.linspace(0, 1, 100)
+            reshaped_inputs = np.reshape(inputs, [-1, 1, 1])
+            outputs = ensemble.compute_outputs(reshaped_inputs)
+            training_dynamics["numeric_outputs"].append(
+                [output.tolist() for output in outputs]
+            )
+
+            theory_output = theory.compute_output()
+            training_dynamics["theoretic_output"].append(
+                [theory_output_entry.tolist() for theory_output_entry in theory_output]
+            )
+            # draw training graphs
             for training_graphic in training_graphic_configs:
-                if step % training_graphic["steps_per_image"] == 0:
-                    ax = training_graphic["ax"]
-                    ax.clear()
-                    ax.set_xlim(training_graphic["x_lim"])
-                    ax.set_ylim(training_graphic["y_lim"])      
-                    
-                    
+                ax = training_graphic["ax"]
+                ax.clear()
+                ax.set_xlim(training_graphic["x_lim"])
+                ax.set_ylim(training_graphic["y_lim"])
 
-                    inputs = np.linspace(0, 1, 100)
-                    outputs = ensemble.compute_outputs(inputs)    
-
-                    if "ensemble" in training_graphic["graphs"]:
-                        for i, output in enumerate(outputs):
-                            ax.plot(
-                                inputs,
-                                np.concatenate(output).ravel(),
-                                "r-",
-                                label="Ensemble output (numeric)" if i == 0 else "",
-                            )
-
-                    if "ensemble_average" in training_graphic["graphs"]:
-                        average_output = np.average(outputs, axis=0)
+                if "ensemble" in training_graphic["graphs"]:
+                    for i, output in enumerate(outputs):
                         ax.plot(
                             inputs,
-                            np.concatenate(average_output).ravel(),
-                            "--",
-                            color="orange",
-                            linewidth=2,
-                            label="Ensemble output average (numeric)",
+                            np.concatenate(output).ravel(),
+                            "r-",
+                            label="Ensemble output (numeric)" if i == 0 else "",
                         )
 
-                    if "data" in training_graphic["graphs"]:
-                        ax.plot(
-                            self.data[0],
-                            self.data[1].flatten(),
-                            "k.",
-                            label="Training data points",
-                        )
+                if "ensemble_average" in training_graphic["graphs"]:
+                    average_output = np.average(outputs, axis=0)
+                    ax.plot(
+                        inputs,
+                        np.concatenate(average_output).ravel(),
+                        "--",
+                        color="orange",
+                        linewidth=2,
+                        label="Ensemble output average (numeric)",
+                    )
 
-                    ax.legend(loc="lower right")
-                    ax.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
+                if "training_data" in training_graphic["graphs"]:
+                    ax.plot(
+                        self.training_data[0],
+                        self.training_data[1].flatten(),
+                        "k.",
+                        label="Training data points",
+                    )
+
+                if "theory" in training_graphic["graphs"]:
+
+                    ax.plot(
+                        self.data[0],
+                        theory_output,
+                        "b-",
+                        label="Theory output",
+                    )
+
+                ax.legend(loc="lower right")
+                ax.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
 
                 training_fig.canvas.draw()
                 plt.pause(0.001)
                 training_fig.savefig(
                     os.path.join(
-                        self._output_folder, f"image{int(step/training_graphic["steps_per_image"]):>04}.png"
+                        self._output_folder,
+                        f"image{step_index:>04}.png",
                     ),
                     dpi=training_fig.dpi,
                 )
-                
-            
-            average_numeric_loss_cutoff = training_config.get("average_loss_cutoff", 0.0)
-            if average_numeric_loss < average_numeric_loss_cutoff:
+
+            for i, numeric_loss in enumerate(numeric_losses):
+                if (
+                    numeric_loss < results_config["loss_threshold"]
+                    and numeric_training_times[i] == 0
+                ):
+                    numeric_training_times[i] = step
+
+            # if (
+            #    theoretic_loss < results_config["loss_threshold"]
+            #    and theoretical_training_time == 0
+            # ):
+            #    theoretical_training_time = step
+
+            if (
+                all(
+                    [
+                        numeric_training_time > 0
+                        for numeric_training_time in numeric_training_times
+                    ]
+                )
+                and theoretical_training_time > 0
+            ):
                 break
 
         plt.close(training_fig)
 
-        # create a video, requires ffmpeg installed
-        # ffmpeg -f image2 -framerate 10 -i output\image%04d.png -vcodec libx264 -crf 15  -pix_fmt yuv420p -y \output\learning.mp4
-
         results = {
-            "training_time": step
+            "data": self.data,
+            "training_data": self.training_data,
+            "numeric_training_times": numeric_training_times,
+            "theoretic_training_time": theoretical_training_time,
+            "theoretic_ntk": theory.get_NTK().tolist(),
         }
+        import json
+
+        with open(os.path.join(self._output_folder, "results.json"), "w") as outfile:
+            json.dump(results, outfile)
+
+        print(training_dynamics)
+        with open(
+            os.path.join(self._output_folder, "training_dynamics.json"), "w"
+        ) as outfile:
+            json.dump(training_dynamics, outfile)
+
         return results
 
     def _generate_data(self, data_generation_config):
@@ -149,12 +234,28 @@ class Experiment:
         output_config = data_generation_config["output"]
         output_values = dg.generate_outputs(input_values, output_config)
 
-        noise_config = output_config["noise"]
-        #noise = dg.generate_random_numbers(np.size(output_values), noise_config)
-        #output_values += noise
+        # noise_config = output_config["noise"]
+        # noise = dg.generate_random_numbers(np.size(output_values), noise_config)
+        # output_values += noise
 
         data = (input_values, output_values)
-        return data
+        training_data = self._generate_training_data(data, data_generation_config)
+        return (data, training_data)
+
+    def _generate_training_data(self, data, data_generation_config):
+        training_data_ratio = data_generation_config["input"].get(
+            "training_data_ratio", 0.3
+        )
+        data_size = len(data[0])
+        training_data_size = int(data_size * training_data_ratio)
+        indices = np.linspace(0, data_size - 1, training_data_size, dtype=int)
+        training_inputs = data[0][indices]
+        training_outputs = data[1][indices]
+        return training_inputs, training_outputs
 
     def _load_data_from_file(self, data_from_file_config):
         raise NotImplementedError
+
+
+# to create video use command
+# ffmpeg -f image2 -framerate 10 -i C:\Users\university\Documents\thesis\lemniscate\output\image%04d.png -vcodec libx264 -crf 15  -pix_fmt yuv420p -y C:\Users\university\Documents\thesis\lemniscate\output\learning.mp4

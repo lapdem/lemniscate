@@ -1,12 +1,20 @@
 import numpy as np
 from .network import Network
 
+# import all Network implementations
+import numeric.networkTF
+import numeric.networkNP
+
 
 class Ensemble:
     def __init__(self, ensemble_config) -> None:
         self.config = ensemble_config
+        available_networks = Network.get_implementations()
+        NetworkImplementation = available_networks[
+            ensemble_config["network"]["implementation"]
+        ]
         self.networks = [
-            Network(ensemble_config["network"]["hyperparameters"])
+            NetworkImplementation(ensemble_config["network"]["hyperparameters"])
             for i in range(self.config["number_of_networks"])
         ]
 
@@ -33,14 +41,12 @@ class Ensemble:
             )
 
     def compute_outputs(self, inputs):
-        return [
-            [network.compute_output(input) for input in inputs]
-            for network in self.networks
-        ]
+        return [network.compute_outputs(inputs) for network in self.networks]
 
-    def evolve(self, training_data):
-        total_loss = 0
+    def set_training_data(self, training_data):
         for network in self.networks:
-            total_loss += network.evolve(training_data)
-        average_loss = total_loss/len(self.networks)
-        return average_loss
+            network.set_training_data(training_data)
+
+    # returns an list of losses
+    def evolve(self, steps=1):
+        return [network.evolve(steps) for network in self.networks]
