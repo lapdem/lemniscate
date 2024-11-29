@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import util.data_generation as dg
 from numeric.ensemble import Ensemble
 from analytic.theory import Theory
+import util.colors as colors
 
 
 class Experiment:
@@ -49,6 +50,16 @@ class Experiment:
         # write config to output folder
         with open(os.path.join(self._output_folder, "experiment.yaml"), "w") as outfile:
             yaml.dump({"experiment": self.config}, outfile)
+
+        with open(os.path.join(self._output_folder, "data.json"), "w") as outfile:
+            data = {
+                "x": self.data[0].tolist(),
+                "y": self.data[1].tolist(),
+                "training_x": self.training_data[0].tolist(),
+                "training_y": self.training_data[1].tolist(),
+            }
+            json.dump(data, outfile)
+
 
         ensemble = Ensemble(self.config[self._ensemble_config_entry_name])
         theory = Theory(self.config["ensemble"]["network"]["hyperparameters"])
@@ -136,20 +147,12 @@ class Experiment:
                         ax.plot(
                             inputs,
                             np.concatenate(output).ravel(),
-                            "r-",
-                            label="Ensemble output (numeric)" if i == 0 else "",
+                            "-",
+                            color = colors.red_gradient[0],
+                            label="Network outputs" if i == 0 else "",
                         )
 
-                if "ensemble_average" in training_graphic["graphs"]:
-                    average_output = np.average(outputs, axis=0)
-                    ax.plot(
-                        inputs,
-                        np.concatenate(average_output).ravel(),
-                        "--",
-                        color="orange",
-                        linewidth=2,
-                        label="Ensemble output average (numeric)",
-                    )
+                
 
                 if "training_data" in training_graphic["graphs"]:
                     ax.plot(
@@ -164,12 +167,24 @@ class Experiment:
                     ax.plot(
                         self.data[0],
                         theory_output,
-                        "b-",
-                        label="Theory output",
+                        "-",
+                        color= colors.blue_gradient[2],
+                        linewidth=3,
+                        label="Theory mean prediction",
+                    )
+
+                if "ensemble_average" in training_graphic["graphs"]:
+                    average_output = np.average(outputs, axis=0)
+                    ax.plot(
+                        inputs,
+                        np.concatenate(average_output).ravel(),
+                        "--",
+                        color=colors.bright_colors["bright_yellow"],                        
+                        label="Ensemble average",
                     )
 
                 ax.legend(loc="lower right")
-                ax.text(0.05, 0.9, f"{step:>04} steps", transform=ax.transAxes)
+                ax.text(0.05, 0.9, f"{step} steps", transform=ax.transAxes)
 
                 training_fig.canvas.draw()
                 plt.pause(0.001)
@@ -188,11 +203,11 @@ class Experiment:
                 ):
                     numeric_training_times[i] = step
 
-            # if (
-            #    theoretic_loss < results_config["loss_threshold"]
-            #    and theoretical_training_time == 0
-            # ):
-            #    theoretical_training_time = step
+            if (
+                theoretic_loss < results_config["loss_threshold"]
+                and theoretical_training_time == 0
+             ):
+                theoretical_training_time = step
 
             if (
                 all(
@@ -207,19 +222,17 @@ class Experiment:
 
         plt.close(training_fig)
 
-        results = {
-            "data": self.data,
-            "training_data": self.training_data,
+        results = {            
             "numeric_training_times": numeric_training_times,
             "theoretic_training_time": theoretical_training_time,
             "theoretic_ntk": theory.get_NTK().tolist(),
         }
-        import json
+        
 
         with open(os.path.join(self._output_folder, "results.json"), "w") as outfile:
             json.dump(results, outfile)
 
-        print(training_dynamics)
+        
         with open(
             os.path.join(self._output_folder, "training_dynamics.json"), "w"
         ) as outfile:

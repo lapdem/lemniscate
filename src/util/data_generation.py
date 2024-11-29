@@ -35,7 +35,8 @@ output_generator = lambda f: output_generators.setdefault(f.__name__, f)
 
 @output_generator
 def legendre(input_values, parameters):
-    return np.polynomial.legendre.legval(input_values, parameters["coefficients"])
+    polynom = np.polynomial.legendre.Legendre(parameters["coefficients"], domain=[0, 1])
+    return polynom(input_values)
 
 
 @output_generator
