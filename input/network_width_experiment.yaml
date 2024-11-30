@@ -1,15 +1,16 @@
 experiment:
   ensemble:    
-    number_of_networks: 30   
+    number_of_networks: 30    
     network:
       implementation: NetworkTF #tensorflow 
       hyperparameters:
+        #hidden layer is overrideden by the experiment
         layerwidths: [1, 100, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
         training:          
-          learning_rate: 0.01          
+          learning_rate: 0.01         
           loss_function: mean_squared_error
           #numeric_delta: 0.001  #networkNP only
           #method: backprop  #networkNP only
@@ -42,29 +43,22 @@ experiment:
       output:
         function: legendre
         parameters:
-          coefficients: [0,0,0,0,1,0,0,0,0,0,0]
-        #function: sin
-        #parameters:
-        #  phase: 90
-        #  frequency: 2 
+          coefficients: [0,0,0,1,0,0,0,0,0,0,0]        
         noise:        
           distribution: gaussian
           random_seed: 10313
           mean: 0
-          variance: 0
+          variance: 0      
   steps: 
-    source: range
-    range:
-      start: 0
-      stop: 1000000000
-      step: 500
+    source: list #range
+    list: [0, 100, 500, 1000, 1500, 2000]   
   graphics:
-    training:  
-      - graphs: [training_data, ensemble, ensemble_average, theory]
+    training:     
+      - graphs: [theory, training_data, ensemble, ensemble_average]
         x_lim: [-0.1,1.1]
         y_lim: [-1.5, 1.5]            
   results:
-    loss_threshold: 0.01
+    loss_threshold: 0
 #    observables: [NTK, K]
     analytic_order: O1
      

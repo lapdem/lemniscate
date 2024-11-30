@@ -11,10 +11,7 @@ experiment:
         training:          
           learning_rate: 0.01          
           loss_function: mean_squared_error
-          #numeric_delta: 0.001  #networkNP only
-          #method: backprop  #networkNP only
-      initial_parameters:      
-        #possible options: generate, file (not yet)     
+      initial_parameters:
         source: generate                         
         generate:
           random_seed: 10269
@@ -26,27 +23,20 @@ experiment:
             distribution: gaussian
             mean: 0
             variance: 1
-  data:
-    #source of data
-    #possible options: generate, file (not yet)    
+  data:  
     source: generate
-    #only needed if source: generate
     generate:
       input:      
         min: 0
         max: 1      
         size: 100
-        #spacing options: linear, logartihmic, random
         spacing: linear
         training_data_ratio: 0.3
       output:
         function: legendre
         parameters:
+          #change degree for each run
           coefficients: [0,0,0,0,1,0,0,0,0,0,0]
-        #function: sin
-        #parameters:
-        #  phase: 90
-        #  frequency: 2 
         noise:        
           distribution: gaussian
           random_seed: 10313
@@ -56,8 +46,8 @@ experiment:
     source: range
     range:
       start: 0
-      stop: 1000000000
-      step: 500
+      stop: 10000000
+      step: 500 
   graphics:
     training:  
       - graphs: [training_data, ensemble, ensemble_average, theory]
@@ -65,7 +55,6 @@ experiment:
         y_lim: [-1.5, 1.5]            
   results:
     loss_threshold: 0.01
-#    observables: [NTK, K]
     analytic_order: O1
      
    

@@ -216,7 +216,7 @@ class Experiment:
                         for numeric_training_time in numeric_training_times
                     ]
                 )
-                and theoretical_training_time > 0
+                #and theoretical_training_time > 0
             ):
                 break
 

@@ -8,12 +8,14 @@ import colors as colors
 
 plt.rcParams.update({'font.size': 14})
 
-steps_to_plot = [0, 100, 500, 1000, 5000, 10000]
+steps_to_plot_for_figures = [0, 100, 500, 1000, 5000, 10000]
+steps_plot_for_bias_graph = range(0, 10100, 100)
+
 
 results_folder = "C:/Users/university/Documents/thesis/results/training_dynamics"
 
-waveform_folders = ["legendre3", "legendre5", "sin1", "sin2"]
-result_names = ["Legendre 3", "Legendre 5", "Sine f=1", "Sine f=2"]
+waveform_folders = ["legendre3", "sin1", "sin2", "cos2"]
+result_names = ["Legendre 3",  "Sine f=1", "Sine f=2",  "Cosine f=2"]
 
 biases_by_waveform = []
 variances_by_waveform = []
@@ -98,7 +100,7 @@ for waveform_folder in waveform_folders:
         plt.show()
         plt.pause(0.001)
 
-    #draw_outputgraphs(steps_to_plot, steps, theoretic_output, numeric_outputs)
+    #draw_outputgraphs(steps_to_plot_for_figures, steps, theoretic_output, numeric_outputs)
 
     def calculate_biases_and_variances(steps_to_measure, steps, theoretic_output, numeric_outputs):
         biases = []
@@ -124,17 +126,21 @@ for waveform_folder in waveform_folders:
 
         return biases, variances, mean_squared_errors
 
-    calculate_biases_and_variances(steps_to_plot, steps, theoretic_output, numeric_outputs)
-    biases, variances, mse = calculate_biases_and_variances(steps_to_plot, steps, theoretic_output, numeric_outputs)
-
     
+    biases, variances, mse = calculate_biases_and_variances(steps_to_plot_for_figures, steps, theoretic_output, numeric_outputs)
 
-    print("Bias % Variance:")
+    print(waveform_folder + " Bias % Variance:")
     for bias, variance in zip(biases, variances):
         print(f"{bias:.2e} & {variance:.2e} &")
 
-    biases_by_waveform.append(biases)
-    variances_by_waveform.append(variances)
+    
+
+    biases_full, variances_full, mse_full= calculate_biases_and_variances(steps_plot_for_bias_graph, steps, theoretic_output, numeric_outputs)
+
+    
+    biases_by_waveform.append(biases_full)
+    variances_by_waveform.append(variances_full)
+    
 
 
 
@@ -143,22 +149,27 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
 for biases, variances, result_name in zip(biases_by_waveform, variances_by_waveform, result_names):
     # Remove 0 entry
-    biases = biases[1:]
-    variances = variances[1:]
-    steps_to_plot_trimmed = steps_to_plot[1:]
+    biases = biases[2:]
+    variances = variances[2:]
+    steps_to_plot_trimmed = steps_plot_for_bias_graph[2:]
 
     ax1.plot(steps_to_plot_trimmed, np.sqrt(biases), label=result_name)
     ax2.plot(steps_to_plot_trimmed, variances, label=result_name)
 
 ax1.set_xlabel("Training steps")
-ax1.set_ylabel("Mean bias squared")
-ax1.legend()
-ax1.set_title("Bias over time")
+ax1.set_ylabel("Mean bias ²")
+ax1.legend(fontsize=12)
+ax1.set_title("Bias² over time")
+ax1.set_xlim(200, 10000)
+ax2.set_xticks([200] + list(range(2000, 10001, 2000)))
 
 ax2.set_xlabel("Training steps")
-ax2.set_ylabel("Variance")
-ax2.legend()
+ax2.set_ylabel("Mean Variance")
+ax2.legend(fontsize=12)
 ax2.set_title("Variance over time")
+ax2.set_xlim(200, 10000)
+#force xtick at 200
+ax2.set_xticks([200] + list(range(2000, 10001, 2000)))
 
 plt.tight_layout()
 plt.show()

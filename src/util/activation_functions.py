@@ -11,7 +11,8 @@ def tanh(input_values):
     return np.tanh(input_values)
 
 
-tanh.derivative = jit(lambda input_values: (1-np.square(np.tanh(input_values))))
+tanh.derivative = jit(lambda input_values: (1 - np.square(np.tanh(input_values))))
+
 
 @activation_function
 @jit

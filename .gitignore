@@ -1,4 +1,5 @@
 .venv
+.vscod
 build/
 **/__pycache__
 *.egg-info/

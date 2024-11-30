@@ -43,12 +43,9 @@ class Theory:
         print("Eigenvalues of Theta")
         print(np.linalg.eigh(self.Theta))
 
-
-
     def set_training_data(self, training_data):
-        #find the indices of the training data x in all data x
+        # find the indices of the training data x in all data x
         self.training_indices = np.isin(self.x, training_data[0]).nonzero()[0]
-        
 
     def evolve(self, steps=1):
         self.t += steps
@@ -57,16 +54,22 @@ class Theory:
     def compute_output(self, output_indices=None):
         if output_indices is None:
             output_indices = range(len(self.x))
-        return calculate_phi_bar(self.x, self.y, self.t, self.Theta, self.training_indices, output_indices)
+        return calculate_phi_bar(
+            self.x, self.y, self.t, self.Theta, self.training_indices, output_indices
+        )
 
     def compute_training_output(self):
         return self.compute_output(self.training_indices)
-    
+
     def compute_loss(self, output_indices=None):
         if output_indices is None:
             output_indices = range(len(self.x))
-        return float(np.mean(np.square(self.y[output_indices] - self.compute_output(output_indices))))
-    
+        return float(
+            np.mean(
+                np.square(self.y[output_indices] - self.compute_output(output_indices))
+            )
+        )
+
     def compute_training_loss(self):
         return self.compute_loss(self.training_indices)
 

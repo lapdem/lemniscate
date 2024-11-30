@@ -4,6 +4,7 @@ import numpy as np
 
 cache = {}
 
+
 def cached(func):
     @functools.wraps(func)
     def cache_wrapper(*args):
