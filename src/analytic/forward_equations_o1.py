@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import scipy as sp
 import cubature
 from numba import jit
 
@@ -34,7 +35,7 @@ def calculate_Theta(x, rho, lambda_b, lambda_w, C_b, C_w, n_0, layer):
 
     # Theta = matrix_utilities.nearestPDh(Theta)
     print("Theta")
-    print("Eigenvalues of Theta:", np.linalg.eig(Theta)[0])
+    print("Eigenvalues of Theta:", sp.linalg.eig(Theta)[0])
     return Theta
 
 
@@ -53,11 +54,11 @@ def calculate_K(x, rho, C_b, C_w, n_0, layer):
 @cached
 def correlator(rho, K):
     print("Calculating Correlator...")
-    print("Eigenvalues of K:", np.linalg.eigh(K)[0])
+    print("Eigenvalues of K:", sp.linalg.eigh(K)[0])
     # numeric_stability_factor = 0.00
     K = K  # + (numeric_stability_factor * np.eye(K.shape[0]) * np.trace(K) / K.shape[0])
     print("Regularised K matrix:")
-    print("Eigenvalues of regularised K:", np.linalg.eigh(K)[0])
+    print("Eigenvalues of regularised K:", sp.linalg.eigh(K)[0])
     correlator = np.empty_like(K)
     for delta_1 in range(K.shape[0]):
         for delta_2 in range(delta_1, K.shape[1]):
@@ -84,7 +85,7 @@ def correlator(rho, K):
     # inaccuracies in the numeric integration can lead to negative eigenvalues, so we regularise the correlator
     # correlator = matrix_utilities.nearestPDh(correlator)
 
-    print("Eigenvalues of correlator:", np.linalg.eigh(correlator)[0])
+    print("Eigenvalues of correlator:", sp.linalg.eigh(correlator)[0])
     return correlator
 
 
@@ -119,8 +120,8 @@ def correlator_1D(rho, K_entry, numeric_stability_factor=0.00):
 
 
 def correlator_2D(rho, K_reduced):
-    K_reduced_inv = np.linalg.inv(K_reduced)
-    K_reduced_det = np.linalg.det(K_reduced)
+    K_reduced_inv = sp.linalg.inv(K_reduced)
+    K_reduced_det = sp.linalg.det(K_reduced)
 
     # using einsum and vectorization seems to be quicker
     # than just in time compilation which does not support einsum
@@ -162,6 +163,6 @@ def calculate_phi_bar(x, y, t, Theta, training_indices, output_indices):
     y_alpha = y[np.ix_(training_indices)]
     phi_bar = (
         (Theta_delta_alpha @ Theta_tilde_inverse)
-        @ (np.eye(Theta_tilde.shape[0]) - np.linalg.expm(-Theta_tilde * t))
+        @ (np.eye(Theta_tilde.shape[0]) - sp.linalg.expm(-Theta_tilde * t))
     ) @ y_alpha
     return phi_bar
