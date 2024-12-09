@@ -4,12 +4,10 @@ from .forward_equations_o1 import *
 
 
 class Theory:
-
     def __init__(self, hyperparameters):
         # activation function
         self.rho = activation_functions[hyperparameters["activation_function"]]
-        self.lambda_b = hyperparameters["training"]["learning_rate"]
-        self.lambda_w = hyperparameters["training"]["learning_rate"]
+        self.eta = hyperparameters["training"]["learning_rate"]
         # input layer width
         self.n_0 = hyperparameters["layerwidths"][0]
         self.L = len(hyperparameters["layerwidths"]) - 1
@@ -25,6 +23,14 @@ class Theory:
     def set_data(self, data):
         self.x = data[0]
         self.y = data[1]
+
+    def set_training_data(self, training_data):
+        # find the indices of the training data x in all data x
+        # needs changing, doing this on floats is probably not a good idea
+        self.training_indices = np.isin(self.x, training_data[0]).nonzero()[0]
+        # scale learning rate with number of training data points
+        self.lambda_b = self.eta / len(self.training_indices)
+        self.lambda_w = self.eta / len(self.training_indices)
 
         # Neural Tangent Kernel
         self.Theta = calculate_Theta(
@@ -42,10 +48,6 @@ class Theory:
         print(self.Theta)
         print("Eigenvalues of Theta")
         print(np.linalg.eigh(self.Theta))
-
-    def set_training_data(self, training_data):
-        # find the indices of the training data x in all data x
-        self.training_indices = np.isin(self.x, training_data[0]).nonzero()[0]
 
     def evolve(self, steps=1):
         self.t += steps
@@ -68,6 +70,7 @@ class Theory:
             np.mean(
                 np.square(self.y[output_indices] - self.compute_output(output_indices))
             )
+            * 0.5
         )
 
     def compute_training_loss(self):

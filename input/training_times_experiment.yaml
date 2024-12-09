@@ -4,12 +4,12 @@ experiment:
     network:
       implementation: NetworkTF #tensorflow 
       hyperparameters:
-        layerwidths: [1, 100, 1]
+        layerwidths: [1, 500, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
         training:          
-          learning_rate: 0.01          
+          learning_rate: 0.3         
           loss_function: mean_squared_error
       initial_parameters:
         source: generate                         
@@ -36,7 +36,7 @@ experiment:
         function: legendre
         parameters:
           #change degree for each run
-          coefficients: [0,0,0,0,1,0,0,0,0,0,0]
+          coefficients: [0,0,1,0,0,0,0,0,0,0,0]
         noise:        
           distribution: gaussian
           random_seed: 10313
@@ -46,8 +46,9 @@ experiment:
     source: range
     range:
       start: 0
-      stop: 10000000
-      step: 500 
+      stop: 100000000
+      #to speed up the experiment, increase step size according to expected training time      
+      step: 5
   graphics:
     training:  
       - graphs: [training_data, ensemble, ensemble_average, theory]

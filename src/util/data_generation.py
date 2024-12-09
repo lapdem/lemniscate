@@ -60,7 +60,9 @@ def gaussian(
     config,
     random_number_generator,
 ):
-    return random_number_generator.normal(config["mean"], config["variance"], size)
+    return random_number_generator.normal(
+        config["mean"], np.sqrt(config["variance"]), size
+    )
 
 
 def generate_random_numbers(size, config, random_number_generator=None):

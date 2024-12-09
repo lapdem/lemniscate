@@ -6,7 +6,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "util")))
 import colors as colors
-#plt.rcParams.update({'font.size': 14})
+
+# plt.rcParams.update({'font.size': 14})
 
 results_folder = "C:/Users/university/Documents/thesis/results/training_times"
 
@@ -67,6 +68,8 @@ plt.errorbar(
     linewidth=3,
     fmt="none",
     capsize=5,  # Add caps to the error bars
+    # make caps thicker with capthick
+    capthick=2,
 )
 
 for i in range(highest_degree + 1):
@@ -83,10 +86,10 @@ for i in range(highest_degree + 1):
             f"Legendre {i}",
             (sorted_eigenvalues[i], numeric_training_time_mean[i]),
             textcoords="offset points",
-            xytext=(15, -25),
+            xytext=(15, -15),
             ha="center",
         )
-    
+
     else:
         plt.annotate(
             f"Legendre {i}",

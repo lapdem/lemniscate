@@ -5,12 +5,12 @@ experiment:
       implementation: NetworkTF #tensorflow 
       hyperparameters:
         #hidden layer is overrideden by the experiment
-        layerwidths: [1, 100, 1]
+        layerwidths: [1, 500, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
         training:          
-          learning_rate: 0.01         
+          learning_rate: 0.3         
           loss_function: mean_squared_error
           #numeric_delta: 0.001  #networkNP only
           #method: backprop  #networkNP only
@@ -48,18 +48,24 @@ experiment:
           distribution: gaussian
           random_seed: 10313
           mean: 0
-          variance: 0      
+          variance: 0
+  theory:
+    integration_limits: [-5,5]
+    diagonal_regularization: 0.0
+    eigenvalue_cutoff: 0.0                
   steps: 
-    source: list #range
-    list: [0, 100, 500, 1000, 1500, 2000]   
+    source: range
+    range:
+      start: 0
+      stop: 100000000
+      step: 100    
   graphics:
     training:     
       - graphs: [theory, training_data, ensemble, ensemble_average]
         x_lim: [-0.1,1.1]
         y_lim: [-1.5, 1.5]            
   results:
-    loss_threshold: 0
-#    observables: [NTK, K]
+    loss_threshold: 0.01
     analytic_order: O1
      
    

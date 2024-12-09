@@ -1,20 +1,18 @@
 experiment:
   ensemble:    
-    number_of_networks: 30   
+    number_of_networks: 30    
     network:
       implementation: NetworkTF #tensorflow 
       hyperparameters:
-        layerwidths: [1, 100, 1]
+        #layerwidths are adjusted for different experiments
+        layerwidths: [1, 500, 1]
         activation_function: tanh
         output_activation_function: linear
         scale_weighted_sum: one_over_root_n
         training:          
-          learning_rate: 0.01          
+          learning_rate: 0.3         
           loss_function: mean_squared_error
-          #numeric_delta: 0.001  #networkNP only
-          #method: backprop  #networkNP only
-      initial_parameters:      
-        #possible options: generate, file (not yet)     
+      initial_parameters:  
         source: generate                         
         generate:
           random_seed: 10269
@@ -26,46 +24,48 @@ experiment:
             distribution: gaussian
             mean: 0
             variance: 1
-  data:
-    #source of data
-    #possible options: generate, file (not yet)    
+  data: 
     source: generate
-    #only needed if source: generate
     generate:
       input:      
         min: 0
         max: 1      
         size: 100
-        #spacing options: linear, logartihmic, random
         spacing: linear
         training_data_ratio: 0.3
       output:
-        function: legendre
-        parameters:
-          coefficients: [0,0,0,0,1,0,0,0,0,0,0]
-        #function: sin
+        #function is adjusted for different experiments
+        #function: legendre
         #parameters:
-        #  phase: 90
-        #  frequency: 2 
+          #coefficients: [0,0,0,1,0,0,0,0,0,0,0]
+        function: sin
+        parameters:
+          frequency: 1
+          phase: 0        
         noise:        
           distribution: gaussian
           random_seed: 10313
           mean: 0
           variance: 0
+  theory:
+    integration_limits: [-5,5]
+    diagonal_regularization: 0.0
+    eigenvalue_cutoff: 0.0                
   steps: 
     source: range
+    #increase stop for training time experiments
     range:
       start: 0
-      stop: 1000000000
-      step: 500
+      stop: 10100
+      step: 100    
   graphics:
-    training:  
-      - graphs: [training_data, ensemble, ensemble_average, theory]
+    training:     
+      - graphs: [theory, training_data, ensemble, ensemble_average]
         x_lim: [-0.1,1.1]
         y_lim: [-1.5, 1.5]            
   results:
+    #used for training time experiments
     loss_threshold: 0.01
-#    observables: [NTK, K]
     analytic_order: O1
      
    

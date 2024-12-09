@@ -4,6 +4,12 @@ import numpy as np
 import util.data_generation as dg
 
 
+# Custom Mean Squared Error loss with a factor of 1/2.
+def mse_with_half(y_true, y_pred):
+    loss = 0.5 * tf.reduce_mean(tf.square(y_true - y_pred))
+    return loss
+
+
 class NetworkTF(Network):
     def __init__(self, hyper_parameters):
         self.hyperparameters = hyper_parameters
@@ -21,11 +27,9 @@ class NetworkTF(Network):
 
         # hidden layers
         for layer_width in layerwidths[1:-1]:
-            self.model.add(
-                tf.keras.layers.Dense(
-                    layer_width, activation=self.hyperparameters["activation_function"]
-                )
-            )
+            self.model.add(tf.keras.layers.Dense(layer_width, activation=self.hyperparameters["activation_function"]))
+            if self.hyperparameters["scale_weighted_sum"] == "one_over_root_n":
+                self.model.add(tf.keras.layers.Rescaling(1 / np.sqrt(layer_width)))
 
         # output layer
         self.model.add(
@@ -52,25 +56,27 @@ class NetworkTF(Network):
         ]
 
         weights = [
-            self._scale_weights(
-                dg.generate_random_numbers(
-                    (first_width, second_width),
-                    initial_parameter_config["weights"],
-                    random_number_generator=random_number_generator,
-                ),
-                first_width,
+            dg.generate_random_numbers(
+                (first_width, second_width),
+                initial_parameter_config["weights"],
+                random_number_generator=random_number_generator,
             )
             for first_width, second_width in zip(layerwidths[:-1], layerwidths[1:])
         ]
 
-        for layer_index, layer in enumerate(self.model.layers[1:]):
+        dense_layers = [
+            layer
+            for layer in self.model.layers[1:]
+            if isinstance(layer, tf.keras.layers.Dense)
+        ]
+        for layer_index, layer in enumerate(dense_layers):
             layer.set_weights([weights[layer_index], biases[layer_index]])
 
         self.model.compile(
             tf.keras.optimizers.SGD(
                 learning_rate=self.hyperparameters["training"]["learning_rate"]
             ),
-            loss="mean_squared_error",  # Computes the mean of squares of errors between labels and predictions
+            loss=mse_with_half,
         )
 
     def set_training_data(self, training_data):
@@ -78,13 +84,6 @@ class NetworkTF(Network):
             (training_data[0], training_data[1])
         )
         self.training_batch = dataset.batch(len(training_data[0]))
-
-    def _scale_weights(self, weights, previous_width):
-        weight_scaling = self.hyperparameters["scale_weighted_sum"]
-        if weight_scaling == "one_over_root_n":
-            return np.divide(weights, np.sqrt(previous_width))
-        else:
-            return weights
 
     def compute_output(self, input):
         return self.model(input)

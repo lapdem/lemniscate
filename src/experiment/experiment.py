@@ -7,6 +7,7 @@ import util.data_generation as dg
 from numeric.ensemble import Ensemble
 from analytic.theory import Theory
 import util.colors as colors
+import tensorflow as tf
 
 
 class Experiment:
@@ -32,11 +33,14 @@ class Experiment:
         data_source = "source"
         data_source_generate = "generate"
         data_source_from_file = "from_file"
+        data_source_mnist = "mnist"
 
         if data_config[data_source] == data_source_generate:
             return self._generate_data(data_config[data_source_generate])
         elif data_config[data_source] == data_source_from_file:
             return self._load_data_from_file(data_config[data_source_from_file])
+        elif data_config[data_source] == data_source_mnist:
+            return self._load_mnist(data_config[data_source_mnist])
         else:
             raise NotImplementedError(
                 f"Data source '{data_config[data_source]}' is not implemented."
@@ -59,7 +63,6 @@ class Experiment:
                 "training_y": self.training_data[1].tolist(),
             }
             json.dump(data, outfile)
-
 
         ensemble = Ensemble(self.config[self._ensemble_config_entry_name])
         theory = Theory(self.config["ensemble"]["network"]["hyperparameters"])
@@ -148,11 +151,9 @@ class Experiment:
                             inputs,
                             np.concatenate(output).ravel(),
                             "-",
-                            color = colors.red_gradient[0],
+                            color=colors.red_gradient[0],
                             label="Network outputs" if i == 0 else "",
                         )
-
-                
 
                 if "training_data" in training_graphic["graphs"]:
                     ax.plot(
@@ -168,7 +169,7 @@ class Experiment:
                         self.data[0],
                         theory_output,
                         "-",
-                        color= colors.blue_gradient[2],
+                        color=colors.blue_gradient[2],
                         linewidth=3,
                         label="Theory mean prediction",
                     )
@@ -179,7 +180,7 @@ class Experiment:
                         inputs,
                         np.concatenate(average_output).ravel(),
                         "--",
-                        color=colors.bright_colors["bright_yellow"],                        
+                        color=colors.bright_colors["bright_yellow"],
                         label="Ensemble average",
                     )
 
@@ -206,7 +207,7 @@ class Experiment:
             if (
                 theoretic_loss < results_config["loss_threshold"]
                 and theoretical_training_time == 0
-             ):
+            ):
                 theoretical_training_time = step
 
             if (
@@ -216,23 +217,21 @@ class Experiment:
                         for numeric_training_time in numeric_training_times
                     ]
                 )
-                #and theoretical_training_time > 0
+                and theoretical_training_time > 0
             ):
                 break
 
         plt.close(training_fig)
 
-        results = {            
+        results = {
             "numeric_training_times": numeric_training_times,
             "theoretic_training_time": theoretical_training_time,
             "theoretic_ntk": theory.get_NTK().tolist(),
         }
-        
 
         with open(os.path.join(self._output_folder, "results.json"), "w") as outfile:
             json.dump(results, outfile)
 
-        
         with open(
             os.path.join(self._output_folder, "training_dynamics.json"), "w"
         ) as outfile:
@@ -268,6 +267,9 @@ class Experiment:
 
     def _load_data_from_file(self, data_from_file_config):
         raise NotImplementedError
+
+    def _load_mnist(self, data_from_mnist_config):
+        (x_train, y_train), (x_text, y_test) = tf.keras.datasets.mnist.load_data()
 
 
 # to create video use command
